@@ -1,0 +1,7 @@
+
+
+url / track ou album / id (https://open.spotify.com/track/6K4t31amVTZDgR3sKmwUJJ)
+
+
+Links:
+https://developer.spotify.com/documentation/web-api/reference/#/operations/get-audio-features
