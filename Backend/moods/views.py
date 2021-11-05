@@ -1,9 +1,48 @@
-from django.shortcuts import render, redirect
+import os
+from base64 import b64encode
+
+import requests
+from django.http import Http404
+from django.shortcuts import redirect, render
+from dotenv import load_dotenv
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.http import Http404
+
 from .models import Mood
 from .serializers import MoodSerializer
+
+load_dotenv()
+
+def spotify_token():
+    URL = 'https://accounts.spotify.com/api/token'
+
+    message = os.environ.get('CLIENT_ID_SPOTIFY')  + ":" + os.environ.get('SECRET_ID_SPOTIFY')
+    message_bytes = message.encode('ascii')
+    base64_bytes = b64encode(message_bytes)
+    base64_message = base64_bytes.decode('ascii')
+
+    headers = {
+        'Authorization': 'Basic ' + base64_message,
+        'Content-Type': 'application/x-www-form-urlencoded' 
+    }
+
+    data ={'grant_type':'client_credentials'}
+
+    r = requests.post(url=URL, headers=headers, data=data)
+
+    return r.json()['access_token']
+
+def get_track_audio_features(track_url):
+    full_id = track_url.split("/")[-1]
+    track_id = full_id[0:22]
+    access_token = spotify_token()
+
+    headers = {
+        f'Authorization': 'Bearer ' + access_token
+    }
+
+    r = requests.get('https://api.spotify.com/v1/audio-features/' + track_id, headers=headers)
+    return r.json()
 
 def index(request):
     return render(request, 'moods/base.html')
@@ -11,43 +50,36 @@ def index(request):
 @api_view(['GET', 'POST'])
 def api_mood(request, mood_id=0):
     try:
-        mood = Mood.objects.all()
+        all_mood = Mood.objects.all()
     except Mood.DoesNotExist:
         raise Http404()
 
     if mood_id == 0 and request.method == 'POST':
         new_form_data = request.data
-        track_id = new_form_data['track_id']
+        mood = new_form_data['mood']
+        track_url = new_form_data['track_url']
 
-        # new_mood = Mood(
-        #     new_mood_data['mood'],
-        #     new_mood_data['track_id']
-        # )
+        features = get_track_audio_features(track_url)
 
+        new_mood = Mood(
+            mood = mood,
+            track_id = features["id"],
+            acousticness = features["acousticness"],
+            danceability = features["danceability"],
+            energy = features["energy"],
+            instrumentalness = features["instrumentalness"],    
+            key = features["key"],
+            liveness = features["liveness"],
+            loudness = features["loudness"],
+            mode = features["mode"],
+            speechiness = features["speechiness"],
+            tempo = features["tempo"],
+            time_signature = features["time_signature"],
+            valence = features["valence"]
+        )
 
-    # if request.method == 'POST':
-        # new_mood_data = request.data
-    #     mood.mood = new_mood_data['mood']
-    #     mood.track_id = new_mood_data['track_id']
+        new_mood.save()
+        return Response(MoodSerializer(new_mood).data)
 
-    #     ### função fetch para audio features (spotify) 
+    return Response(MoodSerializer(all_mood, many=True).data)
 
-    #     mood.acousticness = new_mood_data['acousticness']
-    #     mood.danceability = new_mood_data['danceability']
-    #     mood.energy = new_mood_data['energy']
-    #     mood.instrumentalness = new_mood_data['instrumentalness']       
-    #     mood.key = new_mood_data['key']
-    #     mood.liveness = new_mood_data['liveness']
-    #     mood.loudness = new_mood_data['loudness']
-    #     mood.mode = new_mood_data['mode']
-    #     mood.speechiness = new_mood_data['speechiness']
-    #     mood.tempo = new_mood_data['tempo']
-    #     mood.time_signature = new_mood_data['time_signature']
-    #     mood.valence = new_mood_data['valence']
-    #     mood.save()
-
-
-        
-    # serialized_mood = MoodSerializer(mood)
-    return Response(MoodSerializer(mood, many=True).data)
-    # return Response(serialized_mood.data)
