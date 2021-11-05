@@ -56,7 +56,7 @@ def api_mood(request, mood_id=0):
 
     if mood_id == 0 and request.method == 'POST':
         new_form_data = request.data
-        mood = new_form_data['mood']
+        mood = new_form_data['mood'][2:]
         track_url = new_form_data['track_url']
 
         features = get_track_audio_features(track_url)
@@ -79,6 +79,7 @@ def api_mood(request, mood_id=0):
         )
 
         new_mood.save()
+        print(new_mood)
         return Response(MoodSerializer(new_mood).data)
 
     return Response(MoodSerializer(all_mood, many=True).data)
