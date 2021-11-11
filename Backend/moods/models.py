@@ -1,6 +1,7 @@
 from django.db import models
 
 class Mood(models.Model):
+    id = models.AutoField(primary_key=True)
     mood = models.CharField(max_length=200)
     track_id = models.CharField(max_length=200)
     acousticness = models.FloatField()
