@@ -82,5 +82,10 @@ def api_mood(request, mood_id=0):
         print(new_mood)
         return Response(MoodSerializer(new_mood).data)
 
+    if mood_id != 0 and request.method == 'GET':
+        mood = Mood.objects.get(id=mood_id)
+        return Response(MoodSerializer(mood).data)
+
+
     return Response(MoodSerializer(all_mood, many=True).data)
 

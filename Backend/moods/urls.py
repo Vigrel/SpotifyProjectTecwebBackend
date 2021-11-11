@@ -4,5 +4,5 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('api/moods/', views.api_mood),
+    path('api/moods/<int:mood_id>/', views.api_mood),
 ]
