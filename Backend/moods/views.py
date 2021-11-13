@@ -49,10 +49,11 @@ def index(request):
 
 @api_view(['GET', 'POST'])
 def api_mood(request, mood_id=0):
-    try:
-        all_mood = Mood.objects.all()
-    except Mood.DoesNotExist:
-        raise Http404()
+    if mood_id == 0:
+        try:
+            all_mood = Mood.objects.all()
+        except Mood.DoesNotExist:
+            raise Http404()
 
     if mood_id == 0 and request.method == 'POST':
         new_form_data = request.data
