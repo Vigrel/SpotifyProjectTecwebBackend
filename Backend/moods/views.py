@@ -44,6 +44,17 @@ def get_track_audio_features(track_url):
     r = requests.get('https://api.spotify.com/v1/audio-features/' + track_id, headers=headers)
     return r.json()
 
+def get_track_info(track_id):
+    access_token = spotify_token()
+
+    headers = {
+        f'Authorization': 'Bearer ' + access_token
+    }
+
+    r = requests.get('https://api.spotify.com/v1/tracks/' + track_id, headers=headers)
+    return r.json()
+
+
 def index(request):
     return render(request, 'moods/base.html')
 
@@ -85,7 +96,15 @@ def api_mood(request, mood_id=0):
 
     if mood_id != 0 and request.method == 'GET':
         mood = Mood.objects.get(id=mood_id)
-        return Response(MoodSerializer(mood).data)
+        serialized_mood = MoodSerializer(mood).data
+
+        info = get_track_info(serialized_mood['track_id'])
+        serialized_mood['album_name'] = info['album']['name']
+        serialized_mood['artist_name'] = info['artists'][0]['name']
+        serialized_mood['track_name'] = info['name']
+        print(serialized_mood)
+        
+        return Response(serialized_mood)
 
 
     return Response(MoodSerializer(all_mood, many=True).data)
