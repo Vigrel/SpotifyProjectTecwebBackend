@@ -5,6 +5,7 @@ import requests
 from django.http import Http404
 from django.shortcuts import redirect, render
 from dotenv import load_dotenv
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -41,7 +42,12 @@ def get_track_audio_features(track_url):
         f'Authorization': 'Bearer ' + access_token
     }
 
-    r = requests.get('https://api.spotify.com/v1/audio-features/' + track_id, headers=headers)
+    try:
+        r = requests.get('https://api.spotify.com/v1/audio-features/' + track_id, headers=headers)
+        r.raise_for_status()
+    except:
+        return 'error'
+
     return r.json()
 
 def get_track_info(track_id):
@@ -71,7 +77,11 @@ def api_mood(request, mood_id=0):
         mood = new_form_data['mood'][2:]
         track_url = new_form_data['track_url']
 
+        if mood == 'll us ur mood' or track_url == '':
+            return Response({'error':'Bad Format'}, status = status.HTTP_400_BAD_REQUEST )
+        
         features = get_track_audio_features(track_url)
+        if features == 'error': return Response({'error':'Bad Format'}, status = status.HTTP_400_BAD_REQUEST )
 
         new_mood = Mood(
             mood = mood,
@@ -91,7 +101,6 @@ def api_mood(request, mood_id=0):
         )
 
         new_mood.save()
-        print(new_mood)
         return Response(MoodSerializer(new_mood).data)
 
     if mood_id != 0 and request.method == 'GET':
