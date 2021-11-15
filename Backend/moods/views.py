@@ -111,7 +111,6 @@ def api_mood(request, mood_id=0):
         serialized_mood['album_name'] = info['album']['name']
         serialized_mood['artist_name'] = info['artists'][0]['name']
         serialized_mood['track_name'] = info['name']
-        print(serialized_mood)
         
         return Response(serialized_mood)
 
