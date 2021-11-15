@@ -74,8 +74,8 @@ def api_mood(request, mood_id=0):
 
     if mood_id == 0 and request.method == 'POST':
         new_form_data = request.data
-        mood = new_form_data['mood'][2:]
-        track_url = new_form_data['track_url']
+        mood = request.POST.get('mood')[2:]
+        track_url = request.POST.get('track_url')
 
         if mood == 'll us ur mood' or track_url == '':
             return Response({'error':'Bad Format'}, status = status.HTTP_400_BAD_REQUEST )
